@@ -23,9 +23,10 @@ jobs:
     # define aws credentials
     steps:
       - name: Configure aws credentials
-        uses: aws-actions/configure-aws-credentials@v4.0.2
+        uses: aws-actions/configure-aws-credentials@v3
         with:
-          role-to-assume: arn:aws:iam::407688908115:role/tf-state-deploy-role
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
       # Checkout the repository to the runner's workspace
