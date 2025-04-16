@@ -1,0 +1,62 @@
+name: Deploy dev github action resources using Terraform
+
+# Trigger the workflow on push and pull request merged
+on:
+  push:
+    branches:
+      - feature  # Trigger workflow on push to main branch
+
+  pull_request:
+    types:
+      - closed   # Trigger on pull request merge (closed and merged PR)
+    branches:
+      - feature
+
+jobs:
+  terraform:
+    name: Deploy AWS Resources using Terraform
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    # define aws credentials
+    steps:
+      - name: Configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v4.0.2
+        with:
+          role-to-assume: arn:aws:iam::407688908115:role/tf-state-deploy-role
+          aws-region: us-east-1
+
+      # Checkout the repository to the runner's workspace
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+
+      # Set up Terraform
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.8.5'
+        
+
+      # Initialize Terraform
+      - name: Terraform Init
+        run: terraform init
+        working-directory: ./env/dev
+
+      # Formatting the terraform files
+      - name: terraform Fmt (fomrat the files)
+        run: terraform fmt -recursive  
+        working-directory: ./env/dev
+
+      # Terraform Plan
+      - name: Terraform Plan
+        run: terraform plan
+        working-directory: ./env/dev
+
+      # Terraform Apply
+      - name: Terraform Apply
+        if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)  
+        run: terraform apply -auto-approve
+        working-directory: ./env/dev
